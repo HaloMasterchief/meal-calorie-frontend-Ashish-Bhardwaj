@@ -46,15 +46,36 @@ export function CalorieCalculator() {
 
   const onSubmit = async (data: CalculatorFormData) => {
     setIsCalculating(true);
+    setResult(null); // Clear previous results
+
     try {
       const response = await calculateCalories(data);
       setResult(response);
-      toast.success("Calories calculated successfully!");
+      toast.success(
+        `Successfully calculated calories for "${data.dish_name}"!`
+      );
       reset();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Calculation failed"
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : "Calculation failed";
+
+      // Show specific error messages based on the error
+      if (errorMessage.includes("Dish not found")) {
+        toast.error(
+          "Dish not found. Please try a different dish name or check the spelling."
+        );
+      } else if (errorMessage.includes("servings")) {
+        toast.error("Invalid servings. Please enter a number greater than 0.");
+      } else if (
+        errorMessage.includes("network") ||
+        errorMessage.includes("fetch")
+      ) {
+        toast.error(
+          "Network error. Please check your connection and try again."
+        );
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsCalculating(false);
     }

@@ -35,10 +35,39 @@ export function LoginForm() {
     setIsLoading(true);
     try {
       await login(data);
-      toast.success("Login successful!");
+      toast.success("Welcome back! Login successful.");
       router.push("/dashboard");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Login failed");
+      const errorMessage =
+        error instanceof Error ? error.message : "Login failed";
+
+      // Show specific error messages based on the error
+      if (
+        errorMessage.includes("Invalid email") ||
+        errorMessage.includes("email")
+      ) {
+        toast.error("Please enter a valid email address.");
+      } else if (errorMessage.includes("password")) {
+        // toast.error("Please enter your password.");
+      } else if (
+        errorMessage.includes("Invalid credentials") ||
+        errorMessage.includes("401")
+      ) {
+        toast.error(
+          "Invalid email or password. Please check your credentials and try again."
+        );
+      } else if (
+        errorMessage.includes("network") ||
+        errorMessage.includes("fetch")
+      ) {
+        toast.error(
+          "Network error. Please check your connection and try again."
+        );
+      } else if (errorMessage.includes("Authentication failed")) {
+        toast.error("Authentication failed. Please try logging in again.");
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -68,8 +97,20 @@ export function LoginForm() {
         />
       </div>
 
-      <Button type="submit" className="w-full" loading={isLoading}>
-        Sign In
+      <Button
+        type="submit"
+        className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+        loading={isLoading}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+            <span>Signing In...</span>
+          </div>
+        ) : (
+          "Sign In"
+        )}
       </Button>
     </form>
   );

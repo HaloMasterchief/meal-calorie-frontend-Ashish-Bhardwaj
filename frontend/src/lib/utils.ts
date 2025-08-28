@@ -6,44 +6,74 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // API utilities
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
-
-export async function apiCall<T>(
+export async function apiCall(
   endpoint: string,
   options: RequestInit = {}
-): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+): Promise<any> {
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const config: RequestInit = {
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    ...options,
+  if (!API_BASE_URL) {
+    throw new Error("API base URL is not configured");
+  }
+
+  const url = `${API_BASE_URL}${endpoint}`;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((options.headers as Record<string, string>) || {}),
   };
 
-  // Add auth token if available
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("auth_token");
-    if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
-    }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
 
   try {
-    const response = await fetch(url, config);
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
 
-      // Handle specific error cases
+      // Handle specific error cases with user-friendly messages
       if (response.status === 500 && endpoint === "/get-calories") {
         throw new Error(
           "Dish not found. Please try a different dish name or check the spelling."
+        );
+      }
+
+      if (response.status === 404 && endpoint === "/get-calories") {
+        throw new Error(
+          "Dish not found. Please try a different dish name or check the spelling."
+        );
+      }
+
+      if (response.status === 400) {
+        // Handle validation errors
+        if (errorData.error?.includes("Email already in use")) {
+          throw new Error(
+            "An account with this email already exists. Please use a different email or try logging in."
+          );
+        }
+        if (errorData.message?.includes("email")) {
+          throw new Error("Please enter a valid email address.");
+        }
+        if (errorData.message?.includes("password")) {
+          throw new Error("Password must be at least 8 characters long.");
+        }
+        if (errorData.message?.includes("servings")) {
+          throw new Error("Servings must be at least 0.1.");
+        }
+        if (errorData.message?.includes("dish_name")) {
+          throw new Error("Please enter a valid dish name.");
+        }
+        throw new Error(
+          errorData.message ||
+            errorData.error ||
+            "Invalid input. Please check your data."
         );
       }
 
@@ -60,6 +90,34 @@ export async function apiCall<T>(
       if (response.status === 404) {
         throw new Error(
           "Resource not found. Please check the URL and try again."
+        );
+      }
+
+      if (response.status === 409) {
+        // Handle conflict errors (e.g., email already exists)
+        if (
+          endpoint === "/auth/register" &&
+          errorData.message?.includes("email")
+        ) {
+          throw new Error(
+            "An account with this email already exists. Please use a different email or try logging in."
+          );
+        }
+        throw new Error(
+          errorData.message || "Conflict occurred. Please try again."
+        );
+      }
+
+      if (response.status === 422) {
+        // Handle validation errors from server
+        if (errorData.errors) {
+          const firstError = Object.values(errorData.errors)[0];
+          throw new Error(
+            Array.isArray(firstError) ? firstError[0] : firstError
+          );
+        }
+        throw new Error(
+          errorData.message || "Validation failed. Please check your input."
         );
       }
 

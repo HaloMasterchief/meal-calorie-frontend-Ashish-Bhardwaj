@@ -37,12 +37,56 @@ export function RegisterForm() {
     setIsLoading(true);
     try {
       await registerUser(data);
-      toast.success("Registration successful!");
+      toast.success(
+        `Welcome ${data.firstName}! Your account has been created successfully.`
+      );
       router.push("/dashboard");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Registration failed"
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : "Registration failed";
+
+      // Show specific error messages based on the error
+      if (
+        errorMessage.includes("email already exists") ||
+        errorMessage.includes("409") ||
+        errorMessage.includes("Email already in use") ||
+        errorMessage.includes("email already in use")
+      ) {
+        toast.error(
+          "An account with this email already exists. Please use a different email or try logging in."
+        );
+      } else if (
+        errorMessage.includes("Invalid email") ||
+        errorMessage.includes("email")
+      ) {
+        toast.error("Please enter a valid email address.");
+      } else if (
+        errorMessage.includes("password") &&
+        errorMessage.includes("8")
+      ) {
+        toast.error("Password must be at least 8 characters long.");
+      } else if (
+        errorMessage.includes("First name") ||
+        errorMessage.includes("firstName")
+      ) {
+        toast.error("Please enter your first name.");
+      } else if (
+        errorMessage.includes("Last name") ||
+        errorMessage.includes("lastName")
+      ) {
+        toast.error("Please enter your last name.");
+      } else if (
+        errorMessage.includes("network") ||
+        errorMessage.includes("fetch")
+      ) {
+        toast.error(
+          "Network error. Please check your connection and try again."
+        );
+      } else if (errorMessage.includes("Validation failed")) {
+        toast.error("Please check your input and try again.");
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -96,8 +140,20 @@ export function RegisterForm() {
         />
       </div>
 
-      <Button type="submit" className="w-full" loading={isLoading}>
-        Create Account
+      <Button
+        type="submit"
+        className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+        loading={isLoading}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+            <span>Creating Account...</span>
+          </div>
+        ) : (
+          "Create Account"
+        )}
       </Button>
     </form>
   );
