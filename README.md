@@ -10,7 +10,6 @@ A modern frontend application for calculating meal calories using an external US
 
 ## 📸 Screenshots
 
-<!-- Add your screenshots here -->
 
 - **Landing Page**: [Screenshot will be added after deployment]
 - **Dashboard**: [Screenshot will be added after deployment]
@@ -18,7 +17,6 @@ A modern frontend application for calculating meal calories using an external US
 
 ## 🌐 Live Demo
 
-<!-- Add your hosted link here after deployment -->
 
 **Live Application**: [Deployment link will be added after Vercel deployment]
 
@@ -392,7 +390,7 @@ npm start
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 🎯 Acknowledgments
 
 - [USDA FoodData Central](https://fdc.nal.usda.gov/) for providing the nutritional database
 - [shadcn/ui](https://ui.shadcn.com/) for the beautiful component library
